@@ -57,10 +57,14 @@ public class FPSPlayer : MonoBehaviour
         {
             Dash();
         }
+        //Move();
+    }
 
+    private void FixedUpdate()
+    {
         Move();
     }
-    
+
     private void Move() // THE MOVEMENT OF THE CHARACTER WITH WASD AND ARROW KEYS
     {
         float sprintSpeed = 10f;
@@ -72,9 +76,11 @@ public class FPSPlayer : MonoBehaviour
         {
             moveSpeed = mainSpeed;
         }
-        transform.Translate(Vector3.forward * Input.GetAxis("Vertical") * moveSpeed * Time.deltaTime);
-        transform.Translate(Vector3.right * Input.GetAxis("Horizontal") * moveSpeed * Time.deltaTime);
         transform.Rotate(Vector3.up * Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime);
+
+        Vector3 pos = transform.position + transform.right * Input.GetAxis("Horizontal") * (moveSpeed * Time.deltaTime);
+        pos = pos + transform.forward * Input.GetAxis("Vertical") * (moveSpeed * Time.deltaTime);
+        rigidBody.MovePosition(pos);
     }
 
     RaycastHit hit;  // THE HIT TO RAYCAST THE JUMP
