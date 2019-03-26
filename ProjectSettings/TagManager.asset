@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Shootable
   - Twitter
+  - Procedural
   layers:
   - Default
   - TransparentFX
