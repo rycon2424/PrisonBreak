@@ -1,48 +1,48 @@
-﻿using System.Collections;
+﻿using System.CodeDom.Compiler;
+using System.Collections;
 using System.Collections.Generic;
+using TreeEditor;
 using UnityEngine;
 
 public class Proceduralbehaviour : MonoBehaviour
 {
-    [HideInInspector]
     public static Proceduralbehaviour instance;
-    public float perlinSeed;
-
-    [Header("World Gen Settings")]
-    public int seed;
-    public int worldSize;
-    public float maxWorldHeight;
+    public float perlinSeedX, perlinSeedY;
+    public int seed = 0;
     public GameObject module;
     public Terrain t;
+    public int worldSize = 10;
+    public float maxHeight = 600;
 
     private ProceduralTerrain pt;
 
-    public List<HeightPass> passes = new List<HeightPass>();
+    public List<HeightPass> passes;
 
-    void Awake()
+    private void Awake()
     {
-        if (instance != this)
+        if (instance == null)
         {
             instance = this;
-            DontDestroyOnLoad(this);
+            DontDestroyOnLoad(gameObject);
+            setSeed(seed);
         }
-        else {
+        else
+        {
             Destroy(this);
         }
     }
 
-    void Start()
+    private void Start()
     {
-        perlinSeed = Random.Range(0.0f, 1000000f);
         pt = new ProceduralTerrain(worldSize, worldSize, passes);
+        //t.terrainData.size = new Vector3(1000, maxHeight, 1000);
         t.terrainData.heightmapResolution = worldSize;
-        t.terrainData.size = new Vector3(worldSize*2.56f, maxWorldHeight, worldSize*2.56f);
         Generate();
     }
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.K))
+        if (Input.GetButtonDown("Fire1"))
         {
             Generate();
         }
@@ -50,26 +50,40 @@ public class Proceduralbehaviour : MonoBehaviour
 
     public void Generate()
     {
-        SetSeed(seed);
-    
-        foreach (var obj in GameObject.FindGameObjectsWithTag("Procedural"))
-        {
-            Destroy(obj);
-        }
+        setSeed(seed);
+        Debug.Log("Generating version: " + seed);
 
         pt.Generate();
-        t.terrainData.SetHeights(0, 0, pt.GetNormalizedHeights());
 
+        float[,] norm = pt.GetHeightsNormalized();
+
+        t.terrainData.SetHeights(0, 0, norm);
+        Texture2D mask = new Texture2D(worldSize, worldSize);
+        Color[] colors = new Color[worldSize * worldSize];
+
+        for (int x = 0; x < worldSize; x++)
+        {
+            for (int z = 0; z < worldSize; z++)
+            {
+                colors[x + (z * worldSize)] = new Color(norm[x, z], norm[x, z], norm[x, z]);
+            }
+        }
+
+        mask.SetPixels(colors);
+        mask.Apply();
+
+        //t.terrainData.terrainLayers[0].diffuseTexture = mask;
     }
 
-    public void SetSeed(int s)
+    public void setSeed(int s)
     {
         Random.InitState(s);
         if (seed != s)
         {
             seed = s;
         }
-        perlinSeed = Random.Range(0.0f, 1000000f);
+        perlinSeedX = Random.Range(0.0f, 1000f);
+        perlinSeedY = Random.Range(0.0f, 1000f);
+
     }
-    
 }
